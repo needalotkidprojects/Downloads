@@ -1,0 +1,1349 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Drag & Drop Uploader → Download Link</title>
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="shortcut icon" href="favicon.ico" />
+  <style>
+    :root{
+      --bg0:#070a14;
+      --bg1:#0b1020;
+      --panel: rgba(18,26,51,.62);
+      --panel2: rgba(15,23,48,.62);
+      --stroke: rgba(255,255,255,.10);
+      --stroke2: rgba(255,255,255,.14);
+      --text:#e8ecff;
+      --muted:#a8b0d6;
+      --accent:#7c5cff;
+      --accent2:#19c37d;
+      --warn:#ff4d4d;
+      --shadow: 0 18px 70px rgba(0,0,0,.40);
+      --shadow2: 0 10px 30px rgba(0,0,0,.28);
+      --radius: 20px;
+      --radius2: 14px;
+      --ring: 0 0 0 3px rgba(124,92,255,.22);
+    }
+
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji";
+      background:
+        radial-gradient(1200px 600px at 20% 0%, rgba(124,92,255,.28), transparent 60%),
+        radial-gradient(900px 500px at 90% 20%, rgba(25,195,125,.20), transparent 55%),
+        linear-gradient(180deg, rgba(11,16,32,.78), rgba(7,10,20,.90)),
+        url("Images/360_F_173186517_BIvtbm0tyDk7m07efIl6xrsjJ4eDlGNm.jpg");
+      background-size: auto, auto, auto, cover;
+      background-position: center, center, center, center;
+      background-repeat: no-repeat;
+      background-attachment: fixed;
+      color: var(--text);
+      padding: clamp(14px, 2.5vw, 26px);
+      position: relative;
+      overflow-x: hidden;
+      overflow-y: auto;
+      min-height: 100vh;
+    }
+
+    #particles{
+      position: fixed;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      z-index: -4;
+      pointer-events: none;
+    }
+
+    #sun{
+      position: fixed;
+      width: 280px;
+      height: 280px;
+      border-radius: 50%;
+      right: -90px;
+      top: -110px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.95), rgba(255,240,190,.92) 18%, rgba(255,210,120,.72) 38%, rgba(255,210,120,.0) 72%),
+        radial-gradient(circle at 55% 55%, rgba(255,220,140,.35), rgba(255,220,140,0) 70%);
+      opacity: .95;
+      z-index: -3;
+      pointer-events: none;
+      animation: sunDrift 22s ease-in-out infinite alternate;
+      transform: translate3d(0,0,0);
+      will-change: transform, opacity;
+      filter: blur(.2px);
+    }
+
+    @keyframes sunDrift{
+      0%{ transform: translate3d(0,0,0) scale(1); opacity:.86 }
+      45%{ transform: translate3d(-18px, 14px, 0) scale(1.03); opacity:.93 }
+      100%{ transform: translate3d(-46px, 34px, 0) scale(1.07); opacity:.98 }
+    }
+
+    @media (prefers-reduced-motion: reduce){
+      #sun{ animation: none }
+    }
+
+    .container{
+      width: min(1120px, 100%);
+      margin: 0 auto;
+      display:grid;
+      gap: clamp(14px, 2.2vw, 22px);
+      position: relative;
+      z-index: 1;
+    }
+
+    .topbar{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: var(--shadow2);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand{
+      display:flex;
+      align-items:center;
+      gap: 12px;
+      min-width: 0;
+    }
+
+    .logo{
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.25), rgba(255,255,255,0) 55%),
+        linear-gradient(135deg, rgba(124,92,255,.55), rgba(25,195,125,.35));
+      border: 1px solid rgba(255,255,255,.16);
+      box-shadow: 0 10px 26px rgba(0,0,0,.28);
+      display:grid;
+      place-items:center;
+      transform: translateZ(0);
+    }
+
+    .brand h1{
+      margin:0;
+      font-size: clamp(16px, 2vw, 18px);
+      letter-spacing: .2px;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+
+    .brand p{
+      margin:2px 0 0 0;
+      color: var(--muted);
+      font-size: 12.5px;
+      line-height: 1.35;
+      white-space: nowrap;
+      overflow:hidden;
+      text-overflow: ellipsis;
+    }
+
+    .actions{
+      display:flex;
+      align-items:center;
+      gap: 10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .chip{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.06);
+      border: 1px solid rgba(255,255,255,.10);
+      color: var(--muted);
+      font-size: 12.5px;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .chip:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.16);
+      background: rgba(255,255,255,.08);
+    }
+
+    .btn{
+      appearance:none;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      color: var(--text);
+      padding: 10px 14px;
+      border-radius: 14px;
+      cursor:pointer;
+      font-weight: 760;
+      letter-spacing: .2px;
+      transition: transform .16s ease, background .16s ease, border-color .16s ease, box-shadow .16s ease;
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+    }
+
+    .btn:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.18);
+      background: rgba(255,255,255,.10);
+      box-shadow: 0 10px 26px rgba(0,0,0,.18);
+    }
+
+    .btn:active{ transform: translateY(0px) scale(.99) }
+
+    .btn:focus-visible{ outline: none; box-shadow: var(--ring); border-color: rgba(124,92,255,.55) }
+
+    .btn.primary{
+      background: linear-gradient(135deg, rgba(124,92,255,.26), rgba(124,92,255,.12));
+      border-color: rgba(124,92,255,.42);
+    }
+
+    .btn.primary:hover{
+      background: linear-gradient(135deg, rgba(124,92,255,.32), rgba(124,92,255,.14));
+      border-color: rgba(124,92,255,.55);
+    }
+
+    .btn.danger{
+      background: rgba(255,77,77,.12);
+      border-color: rgba(255,77,77,.32);
+    }
+
+    .btn.danger:hover{
+      background: rgba(255,77,77,.16);
+      border-color: rgba(255,77,77,.45);
+    }
+
+    .btn[disabled]{
+      opacity: .55;
+      cursor:not-allowed;
+      transform:none;
+      box-shadow:none;
+    }
+
+    .grid{
+      display:grid;
+      grid-template-columns: 1.15fr .85fr;
+      gap: clamp(14px, 2.2vw, 22px);
+      align-items:start;
+    }
+
+    @media (max-width: 900px){
+      .grid{ grid-template-columns: 1fr }
+      .actions{ justify-content:flex-start }
+      .topbar{ gap: 14px; align-items:flex-start; flex-direction: column }
+    }
+
+    .panel{
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02));
+      border: 1px solid rgba(255,255,255,.10);
+      box-shadow: var(--shadow);
+      overflow:hidden;
+      backdrop-filter: blur(10px);
+      position: relative;
+    }
+
+    .panel::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        radial-gradient(900px 300px at 15% 0%, rgba(124,92,255,.16), transparent 55%),
+        radial-gradient(800px 280px at 95% 15%, rgba(25,195,125,.12), transparent 55%);
+      opacity: .9;
+      pointer-events:none;
+    }
+
+    .panel > *{ position: relative; z-index: 1 }
+
+    .hero{
+      padding: 18px 18px 0;
+      display:flex;
+      gap: 12px;
+      align-items:flex-start;
+      justify-content:space-between;
+      flex-wrap:wrap;
+    }
+
+    .heroTitle{
+      display:grid;
+      gap: 6px;
+      min-width: 260px;
+      flex: 1;
+    }
+
+    .heroTitle h2{
+      margin:0;
+      font-size: clamp(18px, 2.6vw, 22px);
+      letter-spacing: .2px;
+    }
+
+    .heroTitle .sub{
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.45;
+      margin: 0;
+    }
+
+    .stats{
+      display:grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+      width: min(460px, 100%);
+    }
+
+    @media (max-width: 520px){
+      .stats{ grid-template-columns: 1fr; width: 100% }
+    }
+
+    .stat{
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(15,23,48,.48);
+      padding: 12px 12px;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+    }
+
+    .stat:hover{
+      transform: translateY(-2px);
+      background: rgba(15,23,48,.60);
+      border-color: rgba(255,255,255,.16);
+      box-shadow: 0 12px 30px rgba(0,0,0,.18);
+    }
+
+    .stat .k{
+      font-size: 11px;
+      color: var(--muted);
+      letter-spacing: .2px;
+      margin:0;
+    }
+
+    .stat .v{
+      margin: 4px 0 0;
+      font-weight: 820;
+      font-size: 14px;
+      letter-spacing: .2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .dropzone{ padding: 18px; }
+
+    .dz{
+      border-radius: calc(var(--radius) - 6px);
+      border: 1px dashed rgba(232,236,255,.22);
+      background: rgba(18,26,51,.46);
+      padding: 22px;
+      min-height: 220px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      position:relative;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,.02);
+      overflow:hidden;
+    }
+
+    .dz::before{
+      content:"";
+      position:absolute;
+      inset:-2px;
+      background: linear-gradient(135deg, rgba(124,92,255,.22), rgba(25,195,125,.12), rgba(255,255,255,0));
+      opacity: 0;
+      transition: opacity .18s ease;
+      pointer-events:none;
+    }
+
+    .dz:hover{
+      transform: translateY(-2px);
+      border-color: rgba(255,255,255,.22);
+      background: rgba(18,26,51,.58);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
+    }
+
+    .dz:hover::before{ opacity: .55 }
+
+    .dz.dragover{
+      border-color: rgba(124,92,255,.95);
+      background: rgba(124,92,255,.12);
+      transform: translateY(-3px);
+      box-shadow: 0 24px 70px rgba(0,0,0,.22);
+    }
+
+    .dz-inner{
+      display:grid;
+      gap: 12px;
+      place-items:center;
+      max-width: 560px;
+      position:relative;
+      z-index: 1;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding: 9px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.07);
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--muted);
+      font-size: 12.5px;
+      transition: transform .18s ease, border-color .18s ease, background .18s ease;
+    }
+
+    .pill:hover{
+      transform: translateY(-1px);
+      border-color: rgba(255,255,255,.18);
+      background: rgba(255,255,255,.09);
+    }
+
+    .pill b{color: var(--text); font-weight: 700;}
+
+    input[type=file]{display:none}
+
+    .divider{ height: 1px; background: rgba(255,255,255,.10); margin: 0 18px; }
+
+    .results{ padding: 18px; display:grid; gap: 12px; }
+
+    .resultsHead{
+      display:flex;
+      align-items:flex-end;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+
+    .resultsHead h3{ margin:0; font-size: 14px; letter-spacing: .2px; color: rgba(232,236,255,.92); }
+    .resultsHead .mini{ color: var(--muted); font-size: 12.5px; }
+
+    .filecard{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items:center;
+      padding: 14px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(15,23,48,.55);
+      transition: transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+    }
+
+    .filecard:hover{
+      transform: translateY(-2px);
+      background: rgba(15,23,48,.62);
+      border-color: rgba(255,255,255,.16);
+      box-shadow: 0 18px 44px rgba(0,0,0,.18);
+    }
+
+    .meta{display:grid; gap:4px; min-width:0}
+    .name{font-weight:800; word-break: break-word; letter-spacing:.2px}
+    .sub{color: var(--muted); font-size: 12.5px}
+
+    a.dl{
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      gap:8px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      text-decoration:none;
+      font-weight: 820;
+      color: var(--text);
+      background: linear-gradient(135deg, rgba(25,195,125,.22), rgba(25,195,125,.10));
+      border: 1px solid rgba(25,195,125,.38);
+      white-space:nowrap;
+      transition: transform .16s ease, background .16s ease, opacity .16s ease, border-color .16s ease, box-shadow .16s ease;
+      box-shadow: 0 0 0 rgba(0,0,0,0);
+    }
+
+    a.dl:hover{
+      transform: translateY(-1px);
+      background: linear-gradient(135deg, rgba(25,195,125,.28), rgba(25,195,125,.12));
+      border-color: rgba(25,195,125,.50);
+      box-shadow: 0 14px 30px rgba(0,0,0,.16);
+    }
+
+    a.dl:active{ transform: translateY(0px) scale(.99) }
+    a.dl:focus-visible{ outline:none; box-shadow: 0 0 0 3px rgba(25,195,125,.22) }
+    a.dl[aria-disabled="true"]{opacity:.55; pointer-events:none}
+
+    .hint{
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12.5px;
+      display:flex;
+      justify-content:space-between;
+      gap: 12px;
+      flex-wrap:wrap;
+    }
+
+    .kbd{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 9px;
+      border: 1px solid rgba(255,255,255,.12);
+      background: rgba(255,255,255,.06);
+      color: var(--muted);
+    }
+
+    .filelist{
+      margin-top: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(15,23,48,.40);
+      overflow:hidden;
+    }
+
+    .filelistHead{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.10);
+      color: rgba(232,236,255,.92);
+      font-size: 12.5px;
+    }
+
+    .filelistBody{
+      max-height: 260px;
+      overflow:auto;
+    }
+
+    .row{
+      display:grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(255,255,255,.08);
+      align-items:center;
+    }
+
+    .row:last-child{ border-bottom: none }
+
+    .row .rname{
+      overflow:hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      font-weight: 720;
+      letter-spacing: .2px;
+    }
+
+    .row .rmeta{
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .side{ display:grid; gap: clamp(14px, 2.2vw, 22px); }
+
+    .sideCard{ padding: 18px; display:grid; gap: 12px; }
+
+    .sideTitle{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+    }
+
+    .sideTitle h3{ margin:0; font-size: 14px; letter-spacing: .2px; }
+
+    .tag{
+      display:inline-flex;
+      align-items:center;
+      gap: 8px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      background: rgba(124,92,255,.12);
+      border: 1px solid rgba(124,92,255,.28);
+      color: rgba(232,236,255,.92);
+      font-size: 12px;
+      transition: transform .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+    .tag:hover{
+      transform: translateY(-1px);
+      background: rgba(124,92,255,.16);
+      border-color: rgba(124,92,255,.40);
+    }
+
+    .list{ display:grid; gap: 10px; }
+
+    .item{
+      display:flex;
+      align-items:flex-start;
+      gap: 10px;
+      padding: 12px 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,.10);
+      background: rgba(15,23,48,.46);
+      transition: transform .18s ease, background .18s ease, border-color .18s ease;
+    }
+
+    .item:hover{
+      transform: translateY(-2px);
+      background: rgba(15,23,48,.56);
+      border-color: rgba(255,255,255,.16);
+    }
+
+    .bullet{
+      width: 34px;
+      height: 34px;
+      border-radius: 14px;
+      display:grid;
+      place-items:center;
+      border: 1px solid rgba(255,255,255,.14);
+      background: rgba(255,255,255,.06);
+      flex: 0 0 auto;
+    }
+
+    .item b{ display:block; font-size: 13px; letter-spacing: .2px; margin: 0; }
+    .item span{ display:block; margin-top: 3px; font-size: 12.5px; color: var(--muted); line-height: 1.35; }
+
+    .toast{
+      position: fixed;
+      left: 50%;
+      bottom: 18px;
+      transform: translateX(-50%);
+      background: rgba(10,14,28,.88);
+      border: 1px solid rgba(255,255,255,.12);
+      color: var(--text);
+      padding: 10px 12px;
+      border-radius: 14px;
+      box-shadow: var(--shadow2);
+      display:none;
+      gap: 8px;
+      align-items:center;
+      max-width: min(680px, calc(100% - 24px));
+      z-index: 50;
+      backdrop-filter: blur(8px);
+    }
+
+    .toast.show{display:flex}
+    .dot{width:10px;height:10px;border-radius:50%}
+    .dot.good{background: var(--accent2)}
+    .dot.bad{background: var(--warn)}
+
+    footer{
+      padding: 10px 2px 2px;
+      color: rgba(168,176,214,.85);
+      font-size: 12.5px;
+      display:flex;
+      justify-content:space-between;
+      gap: 10px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    footer a{
+      color: rgba(232,236,255,.90);
+      text-decoration:none;
+      border-bottom: 1px dashed rgba(255,255,255,.18);
+      transition: border-color .16s ease, opacity .16s ease;
+      opacity: .92;
+    }
+
+    footer a:hover{ border-color: rgba(255,255,255,.34); opacity: 1 }
+
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div id="sun" aria-hidden="true"></div>
+
+  <main class="container">
+    <div class="topbar">
+      <div class="brand">
+        <div class="logo" aria-hidden="true">⬆️</div>
+        <div style="min-width:0">
+          <h1>Local Drop Uploader</h1>
+          <p>Select one file or many → download</p>
+        </div>
+      </div>
+      <div class="actions">
+        <div class="chip" title="Everything stays on your device">
+          <span>🔒</span>
+          <span><b style="color:var(--text)">Local</b> only</span>
+        </div>
+        <button id="browseBtn" class="btn primary" type="button">📁 Choose files</button>
+        <button id="clearBtn" class="btn danger" type="button" disabled>🧹 Clear</button>
+      </div>
+    </div>
+
+    <section class="grid">
+      <section class="panel">
+        <div class="hero">
+          <div class="heroTitle">
+            <h2>Drop files to generate a secure local download</h2>
+            <p class="sub">No upload. No tracking. Your files never leave your device. One file downloads directly; multiple files download as <b>selected_content.zip</b>.</p>
+          </div>
+          <div class="stats" aria-label="Status">
+            <div class="stat">
+              <p class="k">Status</p>
+              <p class="v" id="statStatus">Idle</p>
+            </div>
+            <div class="stat">
+              <p class="k">Files</p>
+              <p class="v" id="statCount">—</p>
+            </div>
+            <div class="stat">
+              <p class="k">Total size</p>
+              <p class="v" id="statSize">—</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="dropzone">
+          <div id="dz" class="dz" role="button" tabindex="0" aria-label="File drop area">
+            <div class="dz-inner">
+              <div class="pill">
+                <span>🧲</span>
+                <span><b>Drag & drop</b> files here, or click to browse</span>
+              </div>
+              <div class="hint">
+                <span>Paste also works:</span>
+                <span><span class="kbd">Ctrl</span> + <span class="kbd">V</span></span>
+              </div>
+            </div>
+            <input id="fileInput" type="file" multiple />
+          </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="results">
+          <div class="resultsHead">
+            <h3>Download link</h3>
+            <div class="mini" id="miniNote">Ready when you are</div>
+          </div>
+
+          <div id="emptyState" class="sub">No files yet. Drop some above.</div>
+
+          <div id="fileArea" style="display:none">
+            <div id="audioWrap" style="display:none">
+              <audio id="audioPlayer" controls style="width:100%"></audio>
+            </div>
+            <div class="filecard">
+              <div class="meta">
+                <div id="zipName" class="name">selected_content.zip</div>
+                <div id="zipInfo" class="sub"></div>
+              </div>
+              <a id="downloadLink" class="dl" href="" aria-disabled="true" tabindex="-1">⬇️ Download</a>
+            </div>
+
+            <div class="filelist" aria-label="Selected files">
+              <div class="filelistHead">
+                <div id="listTitle">Selected files</div>
+                <div id="listMeta" style="color: var(--muted)">—</div>
+              </div>
+              <div class="filelistBody" id="fileList"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side">
+        <section class="panel sideCard">
+          <div class="sideTitle">
+            <h3>What you get</h3>
+            <div class="tag">⬇️ Local</div>
+          </div>
+          <div class="list">
+            <div class="item">
+              <div class="bullet">🧷</div>
+              <div>
+                <b>Multi-file support</b>
+                <span>Drop or pick many files at once. Multiple files are packaged together.</span>
+              </div>
+            </div>
+            <div class="item">
+              <div class="bullet">⚙️</div>
+              <div>
+                <b>Smart output</b>
+                <span>One file downloads directly. Two or more downloads as a ZIP.</span>
+              </div>
+            </div>
+            <div class="item">
+              <div class="bullet">🛡️</div>
+              <div>
+                <b>Private by design</b>
+                <span>No server, no upload, no storage — everything stays local.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel sideCard">
+          <div class="sideTitle">
+            <h3>Tips</h3>
+            <div class="tag">🧠 Pro</div>
+          </div>
+          <div class="list">
+            <div class="item">
+              <div class="bullet">🎧</div>
+              <div>
+                <b>Audio preview</b>
+                <span>If exactly one audio file is selected, it will preview before downloading.</span>
+              </div>
+            </div>
+            <div class="item">
+              <div class="bullet">📱</div>
+              <div>
+                <b>Mobile friendly</b>
+                <span>Responsive layout that fits phones, tablets, and desktops.</span>
+              </div>
+            </div>
+            <div class="item">
+              <div class="bullet">🧹</div>
+              <div>
+                <b>Clear to revoke</b>
+                <span>Clearing revokes the download blob URL to free memory.</span>
+              </div>
+            </div>
+          </div>
+        </section>
+      </aside>
+    </section>
+
+    <footer>
+      <div>Built for local-only file handling.</div>
+      <div><a href="#" id="focusDrop">Focus drop area</a></div>
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" aria-live="polite" aria-atomic="true">
+    <span id="toastDot" class="dot good"></span>
+    <span id="toastMsg"></span>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script>
+    const dz = document.getElementById('dz');
+    const fileInput = document.getElementById('fileInput');
+    const browseBtn = document.getElementById('browseBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    const emptyState = document.getElementById('emptyState');
+    const fileArea = document.getElementById('fileArea');
+    const zipInfoEl = document.getElementById('zipInfo');
+    const downloadLink = document.getElementById('downloadLink');
+    const zipNameEl = document.getElementById('zipName');
+
+    const fileListEl = document.getElementById('fileList');
+    const listMeta = document.getElementById('listMeta');
+
+    const audioWrap = document.getElementById('audioWrap');
+    const audioPlayer = document.getElementById('audioPlayer');
+
+    const toast = document.getElementById('toast');
+    const toastMsg = document.getElementById('toastMsg');
+    const toastDot = document.getElementById('toastDot');
+
+    const statStatus = document.getElementById('statStatus');
+    const statCount = document.getElementById('statCount');
+    const statSize = document.getElementById('statSize');
+    const miniNote = document.getElementById('miniNote');
+    const focusDrop = document.getElementById('focusDrop');
+
+    const microtask = (cb) => {
+      if (typeof queueMicrotask === 'function') queueMicrotask(cb);
+      else Promise.resolve().then(cb);
+    };
+
+    let downloadObjectUrl = null;
+    let previewObjectUrl = null;
+    let dragDepth = 0;
+    let selectedFiles = [];
+    let buildToken = 0;
+
+    function bytesToSize(bytes) {
+      if (!Number.isFinite(bytes)) return '';
+      const units = ['B','KB','MB','GB','TB'];
+      let i = 0;
+      let num = bytes;
+      while (num >= 1024 && i < units.length - 1) {
+        num /= 1024;
+        i++;
+      }
+      const rounded = (i === 0) ? String(Math.round(num)) : num.toFixed(num >= 10 ? 1 : 2);
+      return `${rounded} ${units[i]}`;
+    }
+
+    function showToast(message, ok = true) {
+      toastMsg.textContent = message;
+      toastDot.classList.toggle('good', ok);
+      toastDot.classList.toggle('bad', !ok);
+      toast.classList.add('show');
+      clearTimeout(showToast._t);
+      showToast._t = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+
+    function isLikelyAudio(file) {
+      if (!file) return false;
+      if (file.type && file.type.startsWith('audio/')) return true;
+      const name = (file.name || '').toLowerCase();
+      return /\.(mp3|wav|ogg|oga|flac|aac|m4a|mp4|webm|opus|amr|aiff|aif|aifc|caf|wma)$/i.test(name);
+    }
+
+    function resetAudio() {
+      audioPlayer.pause();
+      audioPlayer.removeAttribute('src');
+      audioPlayer.load();
+      audioWrap.style.display = 'none';
+    }
+
+    function setDownloadEnabled(enabled) {
+      if (enabled) {
+        downloadLink.removeAttribute('aria-disabled');
+        downloadLink.tabIndex = 0;
+      } else {
+        downloadLink.setAttribute('aria-disabled', 'true');
+        downloadLink.tabIndex = -1;
+      }
+    }
+
+    function cleanupDownloadUrl() {
+      if (downloadObjectUrl) {
+        URL.revokeObjectURL(downloadObjectUrl);
+        downloadObjectUrl = null;
+      }
+    }
+
+    function cleanupPreviewUrl() {
+      if (previewObjectUrl) {
+        URL.revokeObjectURL(previewObjectUrl);
+        previewObjectUrl = null;
+      }
+    }
+
+    function setStatsIdle(){
+      statStatus.textContent = 'Idle';
+      statCount.textContent = '—';
+      statSize.textContent = '—';
+      miniNote.textContent = 'Ready when you are';
+    }
+
+    function totalBytes(files){
+      let t = 0;
+      for (const f of files) t += Number.isFinite(f.size) ? f.size : 0;
+      return t;
+    }
+
+    function normalizeNames(files){
+      const used = new Map();
+      return files.map((f) => {
+        const raw = (f && f.name) ? f.name : 'file';
+        const safe = raw.replace(/[\\/:*?"<>|]/g, '_');
+        const key = safe.toLowerCase();
+        const n = (used.get(key) || 0) + 1;
+        used.set(key, n);
+        if (n === 1) return { file: f, name: safe };
+        const dot = safe.lastIndexOf('.');
+        const base = dot > 0 ? safe.slice(0, dot) : safe;
+        const ext = dot > 0 ? safe.slice(dot) : '';
+        return { file: f, name: `${base} (${n})${ext}` };
+      });
+    }
+
+    function renderFileList(files){
+      fileListEl.innerHTML = '';
+      const total = totalBytes(files);
+      listMeta.textContent = `${files.length} file${files.length === 1 ? '' : 's'} • ${bytesToSize(total) || '—'}`;
+
+      const frag = document.createDocumentFragment();
+      const maxRows = 250;
+      const shown = files.slice(0, maxRows);
+      for (const f of shown) {
+        const row = document.createElement('div');
+        row.className = 'row';
+
+        const left = document.createElement('div');
+        left.className = 'rname';
+        left.textContent = f.name || '(unnamed)';
+
+        const right = document.createElement('div');
+        right.className = 'rmeta';
+        right.textContent = bytesToSize(f.size) || '—';
+
+        row.append(left, right);
+        frag.appendChild(row);
+      }
+
+      if (files.length > maxRows) {
+        const row = document.createElement('div');
+        row.className = 'row';
+        const left = document.createElement('div');
+        left.className = 'rname';
+        left.textContent = `+ ${files.length - maxRows} more…`;
+        const right = document.createElement('div');
+        right.className = 'rmeta';
+        right.textContent = '';
+        row.append(left, right);
+        frag.appendChild(row);
+      }
+
+      fileListEl.appendChild(frag);
+    }
+
+    function showArea(hasFiles){
+      emptyState.style.display = hasFiles ? 'none' : '';
+      fileArea.style.display = hasFiles ? '' : 'none';
+      clearBtn.disabled = !hasFiles;
+    }
+
+    function setBusyUI(label){
+      setDownloadEnabled(false);
+      statStatus.textContent = label;
+      miniNote.textContent = label === 'Preparing file…' ? 'Creating local download link' : 'Packaging files locally';
+    }
+
+    function setReadyUI(files, outBytes, outLabel){
+      const total = totalBytes(files);
+      statStatus.textContent = 'Ready';
+      statCount.textContent = `${files.length}`;
+      statSize.textContent = bytesToSize(total) || '—';
+      miniNote.textContent = outLabel;
+      zipInfoEl.textContent = `${files.length} file${files.length === 1 ? '' : 's'} • ${bytesToSize(outBytes) || '—'} ${files.length === 1 ? 'file' : 'ZIP'}`;
+    }
+
+    function clearAll(){
+      buildToken++;
+      selectedFiles = [];
+      cleanupDownloadUrl();
+      cleanupPreviewUrl();
+      resetAudio();
+      downloadLink.href = '';
+      downloadLink.removeAttribute('download');
+      setDownloadEnabled(false);
+      showArea(false);
+      setStatsIdle();
+      zipNameEl.textContent = 'selected_content.zip';
+      zipInfoEl.textContent = '';
+      listMeta.textContent = '—';
+      fileListEl.innerHTML = '';
+    }
+
+    function buildSingle(file){
+      const token = ++buildToken;
+      setBusyUI('Preparing file…');
+
+      microtask(() => {
+        if (token !== buildToken) return;
+        cleanupDownloadUrl();
+        downloadObjectUrl = URL.createObjectURL(file);
+        downloadLink.href = downloadObjectUrl;
+        downloadLink.download = file.name || 'download';
+        setDownloadEnabled(true);
+        zipNameEl.textContent = file.name || 'download';
+        setReadyUI([file], Number.isFinite(file.size) ? file.size : 0, 'File ready locally');
+        showToast('File ready to download!', true);
+      });
+    }
+
+    async function buildZip(files){
+      if (!files.length) return;
+      if (!window.JSZip) {
+        statStatus.textContent = 'Error';
+        miniNote.textContent = 'ZIP library not available';
+        setDownloadEnabled(false);
+        showToast('JSZip failed to load.', false);
+        return;
+      }
+
+      const token = ++buildToken;
+      setBusyUI('Building ZIP…');
+
+      const zip = new window.JSZip();
+      const normalized = normalizeNames(files);
+      for (const { file, name } of normalized) zip.file(name, file);
+
+      let zipBlob;
+      try {
+        zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE', compressionOptions: { level: 6 } });
+      } catch {
+        if (token !== buildToken) return;
+        statStatus.textContent = 'Error';
+        miniNote.textContent = 'ZIP generation failed';
+        showToast('ZIP generation failed.', false);
+        return;
+      }
+
+      if (token !== buildToken) return;
+
+      cleanupDownloadUrl();
+      downloadObjectUrl = URL.createObjectURL(zipBlob);
+
+      downloadLink.href = downloadObjectUrl;
+      downloadLink.download = 'selected_content.zip';
+      setDownloadEnabled(true);
+
+      zipNameEl.textContent = 'selected_content.zip';
+      setReadyUI(files, zipBlob.size, 'ZIP generated locally');
+      showToast('ZIP ready to download!', true);
+    }
+
+    function updatePreview(files){
+      resetAudio();
+      cleanupPreviewUrl();
+
+      if (files.length === 1 && isLikelyAudio(files[0])) {
+        previewObjectUrl = URL.createObjectURL(files[0]);
+        audioPlayer.src = previewObjectUrl;
+        audioPlayer.load();
+        audioWrap.style.display = '';
+      }
+    }
+
+    function setFiles(files){
+      const arr = Array.from(files || []).filter(Boolean);
+      if (!arr.length) {
+        showToast('No files detected.', false);
+        return;
+      }
+
+      selectedFiles = arr;
+      showArea(true);
+      renderFileList(selectedFiles);
+      updatePreview(selectedFiles);
+
+      statCount.textContent = `${selectedFiles.length}`;
+      statSize.textContent = bytesToSize(totalBytes(selectedFiles)) || '—';
+
+      if (selectedFiles.length === 1) {
+        const f = selectedFiles[0];
+        zipInfoEl.textContent = `1 file • preparing download…`;
+        buildSingle(f);
+      } else {
+        zipInfoEl.textContent = `${selectedFiles.length} files • preparing ZIP…`;
+        buildZip(selectedFiles);
+      }
+    }
+
+    function openPicker(){ fileInput.click(); }
+
+    dz.addEventListener('dragenter', (e) => {
+      if (!e.dataTransfer || !Array.from(e.dataTransfer.types || []).includes('Files')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dragDepth++;
+      dz.classList.add('dragover');
+      statStatus.textContent = 'Drop to import';
+      miniNote.textContent = 'Release to prepare';
+    });
+
+    dz.addEventListener('dragover', (e) => {
+      if (!e.dataTransfer || !Array.from(e.dataTransfer.types || []).includes('Files')) return;
+      e.preventDefault();
+      e.stopPropagation();
+      dz.classList.add('dragover');
+    });
+
+    dz.addEventListener('dragleave', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragDepth = Math.max(0, dragDepth - 1);
+      if (dragDepth === 0) {
+        dz.classList.remove('dragover');
+        if (!selectedFiles.length) setStatsIdle();
+      }
+    });
+
+    dz.addEventListener('drop', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+      dragDepth = 0;
+      dz.classList.remove('dragover');
+      const files = e.dataTransfer?.files;
+      if (!files || !files.length) {
+        showToast('No files detected.', false);
+        return;
+      }
+      setFiles(files);
+    });
+
+    browseBtn.addEventListener('click', openPicker);
+
+    dz.addEventListener('click', (e) => {
+      if (e.target instanceof HTMLElement && (e.target.closest('button') || e.target.closest('a'))) return;
+      openPicker();
+    });
+
+    dz.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        openPicker();
+      }
+    });
+
+    fileInput.addEventListener('change', () => {
+      const files = fileInput.files;
+      if (!files || !files.length) return;
+      setFiles(files);
+      fileInput.value = '';
+    });
+
+    window.addEventListener('paste', (e) => {
+      const items = e.clipboardData?.items;
+      if (!items) return;
+      const files = [];
+      for (const item of items) {
+        if (item.kind === 'file') {
+          const f = item.getAsFile();
+          if (f) files.push(f);
+        }
+      }
+      if (files.length) {
+        setFiles(files);
+        showToast('Files pasted — preparing!', true);
+      }
+    });
+
+    clearBtn.addEventListener('click', () => {
+      clearAll();
+      showToast('Cleared.', true);
+    });
+
+    downloadLink.addEventListener('click', (e) => {
+      if (downloadLink.getAttribute('aria-disabled') === 'true') e.preventDefault();
+    });
+
+    focusDrop.addEventListener('click', (e) => {
+      e.preventDefault();
+      dz.focus();
+      dz.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+
+    window.addEventListener('beforeunload', () => {
+      resetAudio();
+      cleanupPreviewUrl();
+      cleanupDownloadUrl();
+    });
+
+    clearAll();
+
+    const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext && canvas.getContext('2d', { alpha: true });
+
+    const state = {
+      w: 0,
+      h: 0,
+      dpr: 1,
+      particles: [],
+      lastT: 0,
+      raf: 0
+    };
+
+    function resizeCanvas(){
+      if (!ctx) return;
+      state.dpr = Math.min(2, window.devicePixelRatio || 1);
+      state.w = Math.max(1, Math.floor(window.innerWidth));
+      state.h = Math.max(1, Math.floor(window.innerHeight));
+      canvas.width = Math.floor(state.w * state.dpr);
+      canvas.height = Math.floor(state.h * state.dpr);
+      ctx.setTransform(state.dpr, 0, 0, state.dpr, 0, 0);
+    }
+
+    function makeParticle(){
+      const s = Math.random();
+      const r = 0.7 + s * 2.1;
+      const speed = 8 + s * 26;
+      const ang = Math.random() * Math.PI * 2;
+      return {
+        x: Math.random() * state.w,
+        y: Math.random() * state.h,
+        vx: Math.cos(ang) * speed,
+        vy: Math.sin(ang) * speed,
+        r,
+        a: 0.06 + s * 0.18,
+        tw: Math.random() * 1200
+      };
+    }
+
+    function seedParticles(){
+      const density = Math.round((state.w * state.h) / 17000);
+      const count = Math.max(70, Math.min(190, density));
+      state.particles.length = 0;
+      for (let i = 0; i < count; i++) state.particles.push(makeParticle());
+    }
+
+    function stopParticles(){
+      cancelAnimationFrame(state.raf);
+      state.raf = 0;
+      state.lastT = 0;
+      if (ctx) ctx.clearRect(0, 0, state.w, state.h);
+    }
+
+    function step(t){
+      state.raf = requestAnimationFrame(step);
+      if (!ctx) return;
+      if (!state.lastT) state.lastT = t;
+      const dt = Math.min(0.05, (t - state.lastT) / 1000);
+      state.lastT = t;
+
+      ctx.clearRect(0, 0, state.w, state.h);
+
+      const windX = Math.sin(t * 0.00012) * 10;
+      const windY = Math.cos(t * 0.00010) * 6;
+
+      for (let i = 0; i < state.particles.length; i++){
+        const p = state.particles[i];
+        p.tw += dt * 720;
+        const wobble = (Math.sin(p.tw * 0.0028) + Math.cos(p.tw * 0.0025)) * 0.38;
+        p.x += (p.vx + windX) * dt * (0.75 + wobble);
+        p.y += (p.vy + windY) * dt * (0.75 + wobble);
+
+        if (p.x < -50) p.x = state.w + 50;
+        if (p.x > state.w + 50) p.x = -50;
+        if (p.y < -50) p.y = state.h + 50;
+        if (p.y > state.h + 50) p.y = -50;
+
+        const g = ctx.createRadialGradient(p.x, p.y, 0, p.x, p.y, p.r * 7);
+        g.addColorStop(0, `rgba(255,255,255,${p.a})`);
+        g.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.r * 7, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function startParticles(){
+      if (!ctx) return;
+      stopParticles();
+      resizeCanvas();
+      seedParticles();
+      if (!reduceMotion) state.raf = requestAnimationFrame(step);
+    }
+
+    window.addEventListener('resize', () => {
+      startParticles();
+    }, { passive: true });
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) stopParticles();
+      else startParticles();
+    });
+
+    if (reduceMotion) stopParticles();
+    else startParticles();
+  </script>
+</body>
+</html>
